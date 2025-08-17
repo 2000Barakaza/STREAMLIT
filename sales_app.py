@@ -1,1 +1,1 @@
-print("Hello world")
+print(len(2435))
