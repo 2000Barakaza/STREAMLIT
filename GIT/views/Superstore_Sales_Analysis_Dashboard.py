@@ -1,16 +1,14 @@
-# sales_app.py
+# views/Superstore_Sales_Analysis_Dashboard.py
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-
-## Suppress warnings:
+# Suppress warnings
 import warnings
 warnings.filterwarnings('ignore')
 st.set_page_config(layout='wide')
 
-
-## Load Data:
+# Load Data
 @st.cache_data
 def load_data(uploaded_file):
     if uploaded_file is not None:
@@ -20,20 +18,17 @@ def load_data(uploaded_file):
         st.warning("No file uploaded. Using default path for demonstration.")
         path = r"C:\Users\This PC\Downloads\archive(1)\train.csv"  # Replace with your actual fallback path
         df = pd.read_csv(path)
-
-    ## Handle Postal Code:
+    # Handle Postal Code
     if 'Postal Code' in df.columns:
         df['Postal Code'].fillna(0, inplace=True)
         df['Postal Code'] = pd.to_numeric(df['Postal Code'], errors="coerce").fillna(0).astype(int)
-
-    ## Handle Order Date:
+    # Handle Order Date
     if 'Order Date' in df.columns:
-        df['Order Date'] = pd.to_datetime(df['Order Date'], errors="coerce",format='%d/%m/%Y')  # Changed to '%d/%m/%Y' to match DD/MM/YYYY format
+        df['Order Date'] = pd.to_datetime(df['Order Date'], errors="coerce", format='%d/%m/%Y')  # Changed to '%d/%m/%Y' to match DD/MM/YYYY format
     else:
         st.error("Missing 'Order Date' column in data.")
         st.stop()
-
-    ##  Convert nullable integers or objects to PyArrow-safe types:
+    # Convert nullable integers or objects to PyArrow-safe types
     for col in df.columns:
         if pd.api.types.is_integer_dtype(df[col]) or pd.api.types.is_float_dtype(df[col]):
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
@@ -43,9 +38,7 @@ def load_data(uploaded_file):
                 df[col] = pd.to_numeric(df[col], errors='ignore')
             except:
                 df[col] = df[col].astype(str)
-
     return df
-
 
 uploaded_file = st.sidebar.file_uploader("Upload Superstore CSV", type="csv")
 df = load_data(uploaded_file)
@@ -55,7 +48,7 @@ if df is None:
 
 st.title("📊 Superstore Sales Analysis Dashboard")
 
-## Sidebar options:
+# Sidebar options
 st.sidebar.title("Navigation")
 option = st.sidebar.selectbox(
     "Choose a view",
@@ -69,7 +62,6 @@ option = st.sidebar.selectbox(
     index=0  # Default to "Overview"
 )
 
-
 # 1. Overview
 if option == "Overview":
     st.subheader("📌 Dataset Overview")
@@ -77,7 +69,7 @@ if option == "Overview":
     st.write("Shape:", df.shape)
     st.write("Null values:", df.isnull().sum())
     st.write("Data Types:")
-    st.write(df.dtypes)
+    st.write(pd.DataFrame(df.dtypes.astype(str), columns=['Data Type']))  # Fixed: Convert dtypes to str and display as DF for PyArrow compatibility
 
 # 2. Customer Segment
 elif option == "Customer Segment Analysis":
@@ -90,7 +82,6 @@ elif option == "Customer Segment Analysis":
     fig1, ax1 = plt.subplots()
     ax1.pie(segment_count['Count'], labels=segment_count['Segment'], autopct='%1.1f%%', colors=['#ff9999', '#66b3ff', '#99ff99'])
     st.pyplot(fig1)
-
 
 # 3. Sales by State
 elif option == "Sales by State (Choropleth)":
@@ -126,7 +117,6 @@ elif option == "Sales by State (Choropleth)":
     fig.update_layout(geo_scope='usa', title='Sales by US State')
     st.plotly_chart(fig, use_container_width=True)
 
-
 # 4. Product Category
 elif option == "Product Category Sales":
     st.subheader("📦 Product Category Performance")
@@ -137,7 +127,6 @@ elif option == "Product Category Sales":
     fig2, ax2 = plt.subplots()
     ax2.pie(category_sales['Sales'], labels=category_sales['Category'], autopct='%1.1f%%', colors=['#ff9999', '#66b3ff', '#99ff99'])
     st.pyplot(fig2)
-
 
 # 5. Time Series
 elif option == "Time Series Analysis":
